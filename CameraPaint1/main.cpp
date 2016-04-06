@@ -1,54 +1,78 @@
-#include <opencv2/objdetect/objdetect.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
 #include <iostream>
-#include <stdio.h>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
-using namespace std;
 using namespace cv;
+using namespace std;
 
-
-int main( int argc, const char** argv )
+int main(int argc, char** argv)
 {
-    CvCapture* capture = 0;
-    Mat frame, frameCopy, image;
+	VideoCapture cap(0); //przechwycenie obrazu z kamery
 
-	capture = cvCaptureFromCAM(CV_CAP_ANY); //0=default, -1=any camera, 1..99=your camera
-	if (!capture)
+	if (!cap.isOpened())
 	{
-		cout << "No camera detected" << endl;
+		cout << "B³¹d! Nie mo¿na otworzyæ kamerki" << endl;
+		return -1;
 	}
 
-	cvNamedWindow("result", CV_WINDOW_AUTOSIZE);
+	namedWindow("Kontrola", CV_WINDOW_AUTOSIZE); //create a window called "Control"
 
-	if (capture)
+	int iLowH = 0;
+	int iHighH = 179;
+
+	int iLowS = 0;
+	int iHighS = 255;
+
+	int iLowV = 0;
+	int iHighV = 255;
+
+	//Tworzenie suwaków w oknie Kontrola
+	cvCreateTrackbar("Niskie H", "Kontrola", &iLowH, 179); //Hue (0 - 179)
+	cvCreateTrackbar("Wysokie H", "Kontrola", &iHighH, 179);
+
+	cvCreateTrackbar("Niskie S", "Kontrola", &iLowS, 255); //Saturation (0 - 255)
+	cvCreateTrackbar("Wysokie S", "Kontrola", &iHighS, 255);
+
+	cvCreateTrackbar("Niskie V", "Kontrola", &iLowV, 255); //Value (0 - 255)
+	cvCreateTrackbar("Wysokie V", "Kontrola", &iHighV, 255);
+
+	while (true)
 	{
-		cout << "In capture ..." << endl;
-		for (;;)
+		Mat imgOriginal;
+
+		bool bSuccess = cap.read(imgOriginal); // wczytanie klatki z wideo
+
+		if (!bSuccess) 
 		{
-			IplImage* iplImg = cvQueryFrame(capture);
-			frame = iplImg;
-
-			if (frame.empty())
-				break;
-			if (iplImg->origin == IPL_ORIGIN_TL)
-				frame.copyTo(frameCopy);
-			else
-				flip(frame, frameCopy, 0);
-
-			cvShowImage("result", iplImg);
-
-			if (waitKey(10) >= 0)
-				break;
+			cout << "B³¹d! Nie mo¿na odczytaæ klatki z wideo" << endl;
+			break;
 		}
-		// waitKey(0);
+
+		Mat imgHSV;
+
+		cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Zamiana z RGB na HSV
+
+		Mat imgThresholded;
+
+		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Thresholdowanie
+		//usuñ ma³e obiekty z pierwszego planu
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+		//wype³nienie luk na pierwszym planie
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+		imshow("Threshold", imgThresholded); //pokazuj tresholdowany obraz
+		imshow("Oryginalny obraz", imgOriginal); //poka¿ oryginalny obraz
+
+		if (waitKey(30) == 27)
+		{
+			cout << "ESC" << endl;
+			break;
+		}
 	}
 
-	cvReleaseCapture(&capture);
-	cvDestroyWindow("result");
+	return 0;
 
-
-    return 0;
-    
 }
