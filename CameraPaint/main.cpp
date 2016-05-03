@@ -11,6 +11,8 @@ using namespace cv;
 #define white CV_RGB(255,255,255)
 #define black CV_RGB(0,0,0)
 
+
+
 //This function returns the square of the euclidean distance between 2 points.
 double dist(Point x, Point y)
 {
@@ -26,7 +28,7 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 	double cd = (offset - pow(p3.x, 2) - pow(p3.y, 2)) / 2.0;
 	double det = (p1.x - p2.x) * (p2.y - p3.y) - (p2.x - p3.x)* (p1.y - p2.y);
 	double TOL = 0.0000001;
-	if (abs(det) < TOL) { cout << "Punkty za blisko!" << endl; return make_pair(Point(0, 0), 0); }
+	if (abs(det) < TOL) { /*cout << "Punkty za blisko!" << endl;*/ return make_pair(Point(0, 0), 0); }
 	double idet = 1 / det;
 	double centerx = (bc * (p2.y - p3.y) - cd * (p1.y - p2.y)) * idet;
 	double centery = (cd * (p1.x - p2.x) - bc * (p2.x - p3.x)) * idet;
@@ -36,6 +38,10 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 
 int main(int argc, char *argv[])
 {
+	CascadeClassifier hand_cascade("hand3.xml");
+	
+
+	bool useHaar = false;
 
 	Mat frame;
 	Mat back;
@@ -46,7 +52,7 @@ int main(int argc, char *argv[])
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
 	namedWindow("Frame");
-	namedWindow("Background");
+	//namedWindow("Background");
 	//namedWindow("Drawing", WINDOW_AUTOSIZE);
 	namedWindow("Drawing");
 	int backgroundFrame = 500;
@@ -60,11 +66,24 @@ int main(int argc, char *argv[])
 	}	
 	int posX = 0;
 	int posY = 0;
+	int frameH;
+	int frameW;
+	//Mat3b frame;
+	Mat ycbcr;
+	Mat hsv;
+
+	
 
 	for (;;)
 	{
 		vector<vector<Point> > contours;
 		cap >> frame;
+		
+		flip(frame, frame, 1); //flips video	
+		frameH = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+
+		
 		if (backgroundFrame>0)
 		{
 			bg.operator ()(frame, fore); backgroundFrame--;
@@ -84,14 +103,21 @@ int main(int argc, char *argv[])
 			//Draw contour
 			vector<vector<Point>> tcontours;
 			tcontours.push_back(contours[i]);
-			drawContours(frame, tcontours, -1, cv::Scalar(0, 0, 255), 2);
+			if (useHaar == false)
+			{
+				drawContours(frame, tcontours, -1, cv::Scalar(0, 0, 255), 2);
+			}
 
 			//Detect Hull in current contour
 			vector<vector<Point> > hulls(1);
 			vector<vector<int> > hullsI(1);
 			convexHull(Mat(tcontours[0]), hulls[0], false);
 			convexHull(Mat(tcontours[0]), hullsI[0], false);
-			drawContours(frame, hulls, -1, cv::Scalar(0, 255, 0), 2);
+			if (useHaar == false)
+			{
+				drawContours(frame, hulls, -1, cv::Scalar(0, 255, 0), 2);
+			}
+			
 
 			//Find minimum area rectangle to enclose hand
 			RotatedRect rect = minAreaRect(Mat(tcontours[0]));
@@ -102,7 +128,10 @@ int main(int argc, char *argv[])
 			{
 				Point2f rect_points[4]; rect.points(rect_points);
 				for (int j = 0; j < 4; j++)
+				if (useHaar == false)
+				{
 					line(frame, rect_points[j], rect_points[(j + 1) % 4], Scalar(255, 0, 0), 1, 8);
+				}					
 				Point rough_palm_center;
 				convexityDefects(tcontours[0], hullsI[0], defects);
 				if (defects.size() >= 3)
@@ -148,6 +177,7 @@ int main(int argc, char *argv[])
 					if (palm_centers.size()>10)
 						palm_centers.erase(palm_centers.begin());
 
+
 					Point palm_center;
 					double radius = 0;
 					for (int i = 0; i<palm_centers.size(); i++)
@@ -160,8 +190,12 @@ int main(int argc, char *argv[])
 					radius /= palm_centers.size();
 
 					//Draw the palm center and the palm circle
-					circle(frame, palm_center, 5, Scalar(144, 144, 255), 3);
-					circle(frame, palm_center, radius, Scalar(144, 144, 255), 2);
+					if (useHaar == false)
+					{
+						circle(frame, palm_center, 5, Scalar(144, 144, 255), 3);
+						circle(frame, palm_center, radius, Scalar(144, 144, 255), 2);
+					}
+					
 					
 					//Detect fingers by finding points that form an almost isosceles triangle with certain thesholds
 					int no_of_fingers = 0;
@@ -186,46 +220,84 @@ int main(int argc, char *argv[])
 					}
 					
 					no_of_fingers = min(5, no_of_fingers);
-					cout << "Palce: " << no_of_fingers << endl;
+					//cout << "Palce: " << no_of_fingers << endl;
+
+					cv::Rect maxRect; // 0 sized rect
+					std::vector<Rect> hands;
+					hand_cascade.detectMultiScale(frame, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(30, 30));
 
 					int lastX = posX; //save x position as last
 					int lastY = posY; //save y position as last
-					posX = palm_center.x; //get new x position
-					posY = palm_center.y; //get new y position
 
-					if (lastX != 0 && lastY != 0)
+					if (useHaar == false)
 					{
-						if (std::abs(lastX - posX) < 50 && std::abs(lastY - posY) < 50) //aby zniwelowaæ b³êdne przeskoki
+						if (0 < palm_center.x < frameW && 0 < palm_center.y < frameH)
 						{
-							if (no_of_fingers == 0)
-							{
-								//putText(frame, "RYSOWANIE ", cvPoint(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200, 200, 250), 1, CV_AA);
-							}
-							if (no_of_fingers == 1)
-							{
-								//putText(frame, "JEDEN PALEC WIÊC RYSUJEMY", cvPoint(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200, 200, 250), 1, CV_AA);
-								line(image,Point(lastX,lastY),Point(posX,posY),Scalar(0,255,0),3,2);
-							}
-							else if (no_of_fingers > 1)
-							{
-								//putText(frame, "RYSUJEMY", cvPoint(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200, 200, 250), 1, CV_AA);
-								line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+							posX = palm_center.x; //get new x position
+							posY = palm_center.y; //get new y position
 
-							}
-		
 						}
-						
+
 					}
-					
-					//cv2.imwrite("pic.jpg", blank_image)
-					//inputMat.copyTo(outputMat, maskMat);
-					
+					else
+					{
+
+						// Draw circles on the detected hands
+						
+						for (int i = 0; i < hands.size(); i++)
+						{
+							if (hands[i].area() > maxRect.area())
+								maxRect = hands[i];
+						}
+						Point center(maxRect.x + maxRect.width*0.5, maxRect.y + maxRect.height*0.5);
+						ellipse(frame, center, Size(maxRect.width*0.5, maxRect.height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
+						circle(frame, center, 5, Scalar(144, 144, 255), 3);
+						posX = maxRect.x;
+						posY = maxRect.y;
+					}
+									
+						if (lastX != 0 && lastY != 0 && posX!=0 && posY!=0)
+						{
+							if (std::abs(lastX - posX) < 50 && std::abs(lastY - posY) < 50) //aby zniwelowaæ b³êdne przeskoki
+							{
+
+								
+								if (useHaar == false)
+								{
+									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
+								}
+								else
+								{
+									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+								}
+									
+														
+									
+
+								
+							}
+
+						}
+
+
 				}
 				
 				
 			}
+			
+			putText(frame, "TERAZ RYSUJÊ!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
+			
+			
+			if (waitKey(1) == 'h')
+			{
+				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);				
+				cout << "ZMIANA TRYBU NA HAAR"<< endl;
+				useHaar = true;
+			}
+			
 
 		}
+		
 		if (backgroundFrame>0)
 		imshow("Frame", frame);
 		imshow("Background", back);

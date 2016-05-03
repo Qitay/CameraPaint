@@ -1,16 +1,22 @@
-﻿Build started 2016-05-03 18:12:19.
+﻿Build started 2016-05-03 23:04:26.
      1>Project "D:\Projekty\CameraPaint\CameraPaint\test1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\VC\bin\CL.exe /c /ID:\Projekty\Biblioteki\opencv2412\build\include /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>main.cpp(34): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>main.cpp(80): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(111): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(129): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(136): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(153): warning C4018: '<' : signed/unsigned mismatch
-     1>main.cpp(164): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>main.cpp(168): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(36): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(83): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(84): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(99): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(140): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(158): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(165): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(183): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(196): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(202): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(234): warning C4804: '<' : unsafe use of type 'bool' in operation
+     1>main.cpp(247): warning C4018: '<' : signed/unsigned mismatch
+     1>main.cpp(252): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>main.cpp(253): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
        Link:
          C:\Program Files (x86)\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Projekty\CameraPaint\CameraPaint\Release\test1.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:D:\Projekty\Biblioteki\opencv2412\build\x86\vc12\lib opencv_calib3d2412.lib opencv_calib3d2412d.lib opencv_contrib2412.lib opencv_contrib2412d.lib opencv_core2412.lib opencv_core2412d.lib opencv_features2d2412.lib opencv_features2d2412d.lib opencv_flann2412.lib opencv_flann2412d.lib opencv_gpu2412.lib opencv_gpu2412d.lib opencv_highgui2412.lib opencv_highgui2412d.lib opencv_imgproc2412.lib opencv_imgproc2412d.lib opencv_legacy2412.lib opencv_legacy2412d.lib opencv_ml2412.lib opencv_ml2412d.lib opencv_nonfree2412.lib opencv_nonfree2412d.lib opencv_objdetect2412.lib opencv_objdetect2412d.lib opencv_ocl2412.lib opencv_ocl2412d.lib opencv_photo2412.lib opencv_photo2412d.lib opencv_stitching2412.lib opencv_stitching2412d.lib opencv_superres2412.lib opencv_superres2412d.lib opencv_ts2412.lib opencv_ts2412d.lib opencv_video2412.lib opencv_video2412d.lib opencv_videostab2412.lib opencv_videostab2412d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Projekty\CameraPaint\CameraPaint\Release\test1.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Projekty\CameraPaint\CameraPaint\Release\test1.lib" /MACHINE:X86 /SAFESEH Release\main.obj
          Generating code
@@ -20,4 +26,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.73
+Time Elapsed 00:00:01.42
