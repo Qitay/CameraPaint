@@ -1,1 +1,0 @@
-# podstawy_teleinformatyki
