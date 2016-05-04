@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 					//cout << frameH << " " << frameW << endl;
 					cv::Rect maxRect; // 0 sized rect
 					std::vector<Rect> hands;
-					hand_cascade.detectMultiScale(frame, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(30, 30));
+					hand_cascade.detectMultiScale(frame, hands, 1.1, 3, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50),Size(200,200));
 
 					int lastX = posX; //save x position as last
 					int lastY = posY; //save y position as last
