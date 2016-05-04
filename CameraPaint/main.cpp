@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
 {
 	CascadeClassifier hand_cascade("hand3.xml");
 
-	// Caputure - change to 0, or other
-	VideoCapture cap(0);
 
 	bool useHaar = true;
 
@@ -49,7 +47,7 @@ int main(int argc, char *argv[])
 	Mat back;
 	Mat fore;
 	vector<pair<Point, double> > palm_centers;
-	
+	VideoCapture cap(3);
 	BackgroundSubtractorMOG2 bg;
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
@@ -60,12 +58,12 @@ int main(int argc, char *argv[])
 	int backgroundFrame = 500;
 
 	Mat image;
-	image = imread("white1.png", CV_LOAD_IMAGE_COLOR);   
-	if (!image.data)                             
+	image = imread("white1.png", CV_LOAD_IMAGE_COLOR);
+	if (!image.data)
 	{
 		cout << "Nie mo¿na otworzyæ obrazu!" << std::endl;
 		return -1;
-	}	
+	}
 	int posX = 0;
 	int posY = 0;
 	int frameH;
@@ -76,13 +74,14 @@ int main(int argc, char *argv[])
 	int R = 0;
 	int B = 0;
 	int G = 0;
+	int thickness = 3;
 
 
 	for (;;)
 	{
 		vector<vector<Point> > contours;
 		cap >> frame;
-		
+
 		flip(frame, frame, 1); //flips video	
 		frameH = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
@@ -94,6 +93,14 @@ int main(int argc, char *argv[])
 		putText(frame, "KOLOR", Point(5, 150), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
 		rectangle(frame, Point(0, 200), Point(100, 300), Scalar(240, 17, 17), 2, 8, 0);
 		putText(frame, "KOLOR", Point(5, 250), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
+		rectangle(frame, Point(0, 300), Point(100, 400), Scalar(0, 0, 255), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
+
+		rectangle(frame, Point(540, 0), Point(640, 100), Scalar(0, 0, 0), 2, 8, 0);
+		line(frame, Point(550, 50), Point(630, 50), Scalar(0, 0, 0), 9, 2);
+		rectangle(frame, Point(540, 100), Point(640, 200), Scalar(0, 0, 0), 2, 8, 0);
+		line(frame, Point(550, 150), Point(630, 150), Scalar(0, 0, 0), 3, 2);
+		//putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
 
 		if (backgroundFrame>0)
 		{
@@ -108,7 +115,7 @@ int main(int argc, char *argv[])
 		dilate(fore, fore, Mat());
 		findContours(fore, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 		for (int i = 0; i<contours.size(); i++)
-		//Ignore all small insignificant areas
+			//Ignore all small insignificant areas
 		if (contourArea(contours[i]) >= 5000)
 		{
 			//Draw contour
@@ -128,7 +135,7 @@ int main(int argc, char *argv[])
 			{
 				drawContours(frame, hulls, -1, cv::Scalar(0, 255, 0), 2);
 			}
-			
+
 
 			//Find minimum area rectangle to enclose hand
 			RotatedRect rect = minAreaRect(Mat(tcontours[0]));
@@ -142,7 +149,7 @@ int main(int argc, char *argv[])
 				if (useHaar == false)
 				{
 					line(frame, rect_points[j], rect_points[(j + 1) % 4], Scalar(255, 0, 0), 1, 8);
-				}					
+				}
 				Point rough_palm_center;
 				convexityDefects(tcontours[0], hullsI[0], defects);
 				if (defects.size() >= 3)
@@ -206,8 +213,8 @@ int main(int argc, char *argv[])
 						circle(frame, palm_center, 5, Scalar(144, 144, 255), 3);
 						circle(frame, palm_center, radius, Scalar(144, 144, 255), 2);
 					}
-					
-					
+
+
 					//Detect fingers by finding points that form an almost isosceles triangle with certain thesholds
 					int no_of_fingers = 0;
 					for (int j = 0; j<defects.size(); j++)
@@ -229,10 +236,10 @@ int main(int argc, char *argv[])
 								line(frame, ptEnd, ptFar, Scalar(0, 255, 0), 1), no_of_fingers++;
 						}
 					}
-					
+
 					no_of_fingers = min(5, no_of_fingers);
 					//cout << "Palce: " << no_of_fingers << endl;
-
+					//cout << frameH << " " << frameW << endl;
 					cv::Rect maxRect; // 0 sized rect
 					std::vector<Rect> hands;
 					hand_cascade.detectMultiScale(frame, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(30, 30));
@@ -254,7 +261,7 @@ int main(int argc, char *argv[])
 					{
 
 						// Draw circles on the detected hands
-						
+
 						for (int i = 0; i < hands.size(); i++)
 						{
 							if (hands[i].area() > maxRect.area())
@@ -266,68 +273,92 @@ int main(int argc, char *argv[])
 						posX = maxRect.x;
 						posY = maxRect.y;
 					}
-									
-						if (lastX != 0 && lastY != 0 && posX!=0 && posY!=0)
-						{
-							if (std::abs(lastX - posX) < 50 && std::abs(lastY - posY) < 50) //aby zniwelowaæ b³êdne przeskoki
-							{
 
-								
-								if (useHaar == false)
-								{
-									//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
-									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R,B,G), 3, 2);
-								}
-								else
-								{
-									//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
-									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R,B,G), 3, 2);
-								}
-																
-								if (posX > 0 && posX < 100 && posY<100 && posY>0)
-								{
-									
-								}
-								if (posX > 0 && posX < 100 && posY<200 && posY>100)
-								{
-									R = 0;
-									B = 255;
-									G = 0;
-									
-									putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
-								}
-								if (posX > 0 && posX < 100 && posY<300 && posY>200)
-								{
-									R = 240;
-									B = 17;
-									G = 17;
-									
-									putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
-								}	
+					if (lastX != 0 && lastY != 0 && posX != 0 && posY != 0)
+					{
+						if (std::abs(lastX - posX) < 50 && std::abs(lastY - posY) < 50) //aby zniwelowaæ b³êdne przeskoki
+						{
+
+
+							if (useHaar == false)
+							{
+								//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
+								line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
 							}
+							else
+							{
+								//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+								line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
+							}
+
+							if (posX > 0 && posX < 100 && posY<100 && posY>0)
+							{
+								image = imread("white1.png", CV_LOAD_IMAGE_COLOR);
+							}
+							if (posX > 0 && posX < 100 && posY<200 && posY>100)
+							{
+								R = 0;
+								B = 255;
+								G = 0;
+
+								putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+							}
+							if (posX > 0 && posX < 100 && posY<300 && posY>200)
+							{
+								R = 240;
+								B = 17;
+								G = 17;
+
+								putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+							}
+							if (posX > 0 && posX < 100 && posY<400 && posY>300)
+							{
+								R = 0;
+								B = 0;
+								G = 255;
+
+
+								putText(frame, "Wybrano czerwony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+							}
+							if (posX > 540 && posX < 640 && posY<100 && posY>0)
+							{
+								thickness = 9;
+								putText(frame, "Grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+							}
+							if (posX > 540 && posX < 640 && posY<200 && posY>100)
+							{
+								thickness = 3;
+								putText(frame, "Mniej grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+							}
+
 						}
+
+					}
+
+
 				}
+
+
 			}
-			
+
 			putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
-			
-			
+
+
 			if (waitKey(1) == 'h')
 			{
-				//exit
-				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);				
-				cout << "ZMIANA TRYBU!"<< endl;
+				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+				cout << "ZMIANA TRYBU!" << endl;
 				useHaar = false;
 			}
-			
+
 
 		}
-		
+
 		//if (backgroundFrame>0)
 		imshow("Frame", frame);
 		imshow("Background", back);
-		imshow("Drawing", image);                 
-		
+		imshow("Drawing", image);
+
 		if (waitKey(10) >= 0) break;
 	}
 	return 0;
