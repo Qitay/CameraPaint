@@ -39,15 +39,17 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 int main(int argc, char *argv[])
 {
 	CascadeClassifier hand_cascade("hand3.xml");
-	
 
-	bool useHaar = false;
+	// Caputure - change to 0, or other
+	VideoCapture cap(0);
+
+	bool useHaar = true;
 
 	Mat frame;
 	Mat back;
 	Mat fore;
 	vector<pair<Point, double> > palm_centers;
-	VideoCapture cap(3);
+	
 	BackgroundSubtractorMOG2 bg;
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
@@ -71,8 +73,10 @@ int main(int argc, char *argv[])
 	//Mat3b frame;
 	Mat ycbcr;
 	Mat hsv;
+	int R = 0;
+	int B = 0;
+	int G = 0;
 
-	
 
 	for (;;)
 	{
@@ -83,7 +87,14 @@ int main(int argc, char *argv[])
 		frameH = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 
-		
+
+		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 0, 255), 2, 8, 0);
+		putText(frame, "USUN", Point(5, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
+		rectangle(frame, Point(0, 100), Point(100, 200), Scalar(0, 255, 0), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 150), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
+		rectangle(frame, Point(0, 200), Point(100, 300), Scalar(240, 17, 17), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 250), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
+
 		if (backgroundFrame>0)
 		{
 			bg.operator ()(frame, fore); backgroundFrame--;
@@ -264,41 +275,55 @@ int main(int argc, char *argv[])
 								
 								if (useHaar == false)
 								{
-									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
+									//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
+									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R,B,G), 3, 2);
 								}
 								else
 								{
-									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+									//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+									line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R,B,G), 3, 2);
 								}
+																
+								if (posX > 0 && posX < 100 && posY<100 && posY>0)
+								{
 									
-														
+								}
+								if (posX > 0 && posX < 100 && posY<200 && posY>100)
+								{
+									R = 0;
+									B = 255;
+									G = 0;
 									
-
-								
+									putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+								}
+								if (posX > 0 && posX < 100 && posY<300 && posY>200)
+								{
+									R = 240;
+									B = 17;
+									G = 17;
+									
+									putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+								}	
 							}
-
 						}
-
-
 				}
-				
-				
 			}
 			
-			putText(frame, "TERAZ RYSUJÊ!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
+			putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
 			
 			
 			if (waitKey(1) == 'h')
 			{
+				//exit
 				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);				
-				cout << "ZMIANA TRYBU NA HAAR"<< endl;
-				useHaar = true;
+				cout << "ZMIANA TRYBU!"<< endl;
+				useHaar = false;
 			}
 			
 
 		}
 		
-		if (backgroundFrame>0)
+		//if (backgroundFrame>0)
 		imshow("Frame", frame);
 		imshow("Background", back);
 		imshow("Drawing", image);                 
