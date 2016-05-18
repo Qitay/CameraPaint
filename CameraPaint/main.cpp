@@ -46,6 +46,8 @@ int main(int argc, char *argv[])
 	Mat frame;
 	Mat back;
 	Mat fore;
+	Mat detection;
+	Mat hsv;
 	vector<pair<Point, double> > palm_centers;
 	VideoCapture cap(3);
 	BackgroundSubtractorMOG2 bg;
@@ -55,6 +57,10 @@ int main(int argc, char *argv[])
 	//namedWindow("Background");
 	//namedWindow("Drawing", WINDOW_AUTOSIZE);
 	namedWindow("Drawing");
+	namedWindow("Detection");
+	namedWindow("HSV");
+	namedWindow("YCBCR");
+
 	int backgroundFrame = 500;
 
 	Mat image;
@@ -70,7 +76,7 @@ int main(int argc, char *argv[])
 	int frameW;
 	//Mat3b frame;
 	Mat ycbcr;
-	Mat hsv;
+	Mat hsvv;
 	int R = 0;
 	int B = 0;
 	int G = 0;
@@ -81,11 +87,22 @@ int main(int argc, char *argv[])
 	{
 		vector<vector<Point> > contours;
 		cap >> frame;
+		cap >> detection;
+		cap >> hsvv;
+		cap >> ycbcr;
 
 		flip(frame, frame, 1); //flips video	
+		flip(detection, detection, 1); //flips video
+		flip(hsvv, hsvv, 1); //flips video	
+		flip(ycbcr, ycbcr, 1); //flips video	
 		frameH = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 
+		//blur(src, src, Size(3, 3));
+		cvtColor(detection, hsvv, CV_BGR2HSV);
+		cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
+		inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
+		inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 
 		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 0, 255), 2, 8, 0);
 		putText(frame, "USUN", Point(5, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
@@ -242,7 +259,7 @@ int main(int argc, char *argv[])
 					//cout << frameH << " " << frameW << endl;
 					cv::Rect maxRect; // 0 sized rect
 					std::vector<Rect> hands;
-					hand_cascade.detectMultiScale(frame, hands, 1.1, 3, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50),Size(200,200));
+					hand_cascade.detectMultiScale(detection, hands, 1.1, 3, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50),Size(200,200));
 
 					int lastX = posX; //save x position as last
 					int lastY = posY; //save y position as last
@@ -356,9 +373,11 @@ int main(int argc, char *argv[])
 
 		//if (backgroundFrame>0)
 		imshow("Frame", frame);
-		imshow("Background", back);
+		//imshow("Background", back);
 		imshow("Drawing", image);
-
+		imshow("Detection", detection);
+		imshow("HSV", hsvv);
+		imshow("YCBCR", ycbcr);
 		if (waitKey(10) >= 0) break;
 	}
 	return 0;
