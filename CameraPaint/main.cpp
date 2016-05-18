@@ -47,8 +47,10 @@ int main(int argc, char *argv[])
 	CascadeClassifier face_cascade("face1.xml");
 
 	bool useHaar = true;
+	bool useSkinDet = true;
+
 	int cascadeIndex = 1;
-	char waitkey;
+	char waitkey = '-';
 
 	Mat frame;
 	Mat back;
@@ -67,9 +69,8 @@ int main(int argc, char *argv[])
 	
 	//namedWindow("Drawing");
 	namedWindow("Detection");
-
-	//namedWindow("HSV");
-	//namedWindow("YCBCR");
+	/*namedWindow("HSV");
+	namedWindow("YCBCR");*/
 
 	int backgroundFrame = 500;
 
@@ -85,8 +86,10 @@ int main(int argc, char *argv[])
 	int frameH;
 	int frameW;
 	//Mat3b frame;
-	//Mat ycbcr;
-	//Mat hsvv;
+
+	Mat ycbcr;
+	Mat hsvv;
+
 	int R = 0;
 	int B = 0;
 	int G = 0;
@@ -108,8 +111,20 @@ int main(int argc, char *argv[])
 
 		//SKIN COLOR DETECTION
 
-		//cap >> hsvv;
-		//cap >> ycbcr;
+		if (useSkinDet)
+		{
+			flip(hsvv, hsvv, 1); //flips video	
+			flip(ycbcr, ycbcr, 1); //flips video	
+
+			//blur(src, src, Size(3, 3));
+			cvtColor(detection, hsvv, CV_BGR2HSV);
+			cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
+
+
+			inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
+			inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
+		}
+
 
 		//flip(hsvv, hsvv, 1); //flips video	
 		//flip(ycbcr, ycbcr, 1); //flips video	
@@ -391,7 +406,7 @@ int main(int argc, char *argv[])
 			
 
 
-			/*if (waitKey(1) == 'h')
+			if (waitKey(1) == 'h')
 			{
 				if (useHaar == false)
 				{
@@ -406,40 +421,9 @@ int main(int argc, char *argv[])
 					useHaar = false;
 				}
 				
-			}*/
-
-			waitkey = waitKey(1);
-			if (waitkey == ' ')
-			{
-				cascadeIndex++;
-				if (cascadeIndex > 5)
-				{
-					cascadeIndex = 1;
-				}
-				cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
 			}
-			else if (waitkey == 's')
-			{
-				string s = "screen-";
 
-				time_t rawtime;
-				struct tm * timeinfo;
-				char buffer[80];
-
-				time(&rawtime);
-				timeinfo = localtime(&rawtime);
-
-				strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
-				std::string str(buffer);
-
-				s += str;
-				s += ".jpg";
-
-				imwrite(s, image);
-				cout << "Zapis pliku " << s << endl;
-			}
-			waitkey = '-';
-		}
+			
 
 		//if (backgroundFrame>0)
 		imshow("Frame", frame);
@@ -448,8 +432,83 @@ int main(int argc, char *argv[])
 
 		imshow("Detection", detection);
 
-		//imshow("HSV", hsvv);
-		//imshow("YCBCR", ycbcr);
+		if (useSkinDet)
+		{
+			imshow("HSV", hsvv);
+			imshow("YCBCR", ycbcr);
+		}
+		
+		waitkey = waitKey(2);
+		switch (waitkey)
+		{
+		case '-':
+			break;
+		case ' ':
+		{
+			cascadeIndex++;
+			if (cascadeIndex > 5)
+			{
+				cascadeIndex = 1;
+			}
+			cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
+			break;
+		}
+		case 's':
+		{
+			string s = "screen-";
+
+			time_t rawtime;
+			struct tm * timeinfo;
+			char buffer[80];
+
+			time(&rawtime);
+			timeinfo = localtime(&rawtime);
+
+			strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+			std::string str(buffer);
+
+			s += str;
+			s += ".jpg";
+
+			imwrite(s, image);
+			cout << "Zapis pliku " << s << endl;
+			break;
+		}
+		case 'h':
+		{
+			if (useHaar == false)
+			{
+				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+				cout << "ZMIANA TRYBU!" << endl;
+				useHaar = true;
+			}
+			else
+			{
+				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+				cout << "ZMIANA TRYBU!" << endl;
+				useHaar = false;
+			}
+			break;
+		}
+		case 'g':
+		{
+			if (useSkinDet == false)
+			{
+				//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+				cout << "ZMIANA TRYBU!" << endl;
+				useSkinDet = true;
+			}
+			else
+			{
+				//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+				cout << "ZMIANA TRYBU!" << endl;
+				useSkinDet = false;
+			}
+			break;
+		}
+		}
+		waitkey = '-';
+		}
 		//if (waitKey(10) >= 0) break;
 	}
 	return 0;
