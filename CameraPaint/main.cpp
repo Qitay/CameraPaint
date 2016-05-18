@@ -11,8 +11,6 @@ using namespace cv;
 #define white CV_RGB(255,255,255)
 #define black CV_RGB(0,0,0)
 
-
-
 //This function returns the square of the euclidean distance between 2 points.
 double dist(Point x, Point y)
 {
@@ -36,12 +34,19 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 	return make_pair(Point(centerx, centery), radius);
 }
 
+
 int main(int argc, char *argv[])
 {
 	CascadeClassifier hand_cascade("hand3.xml");
-
+	CascadeClassifier hand_cascade1("fist1.xml");
+	CascadeClassifier hand_cascade2("fist2.xml");
+	CascadeClassifier hand_cascade3("palm1.xml");
+	CascadeClassifier hand_cascade4("palm2.xml");
+	CascadeClassifier face_cascade("face1.xml");
 
 	bool useHaar = true;
+	int cascadeIndex = 1;
+	int imageNumber = 1;
 
 	Mat frame;
 	Mat back;
@@ -49,8 +54,9 @@ int main(int argc, char *argv[])
 	Mat detection;
 	Mat hsv;
 	vector<pair<Point, double> > palm_centers;
-	VideoCapture cap(3);
+	VideoCapture cap(1);
 	BackgroundSubtractorMOG2 bg;
+
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
 	namedWindow("Frame");
@@ -259,8 +265,31 @@ int main(int argc, char *argv[])
 					//cout << frameH << " " << frameW << endl;
 					cv::Rect maxRect; // 0 sized rect
 					std::vector<Rect> hands;
-					hand_cascade.detectMultiScale(detection, hands, 1.1, 3, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50),Size(200,200));
 
+					// -------------------------------------------------------- //
+
+					switch (cascadeIndex)
+					{
+					case 1:
+						hand_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+						break;
+					case 2:
+						hand_cascade2.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+						break;
+					case 3:
+						hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+						break;
+					case 4:
+						hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+						break;
+					case 5:
+						face_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(400, 400));
+						break;
+					}
+
+
+					
+					
 					int lastX = posX; //save x position as last
 					int lastY = posY; //save y position as last
 
@@ -293,10 +322,8 @@ int main(int argc, char *argv[])
 
 					if (lastX != 0 && lastY != 0 && posX != 0 && posY != 0)
 					{
-						if (std::abs(lastX - posX) < 50 && std::abs(lastY - posY) < 50) //aby zniwelowaæ b³êdne przeskoki
+						if (std::abs(lastX - posX) < 45 && std::abs(lastY - posY) < 45) //aby zniwelowaæ b³êdne przeskoki
 						{
-
-
 							if (useHaar == false)
 							{
 								//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
@@ -347,38 +374,57 @@ int main(int argc, char *argv[])
 								thickness = 3;
 								putText(frame, "Mniej grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 							}
-
 						}
-
 					}
-
-
 				}
-
-
 			}
 
 			putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
+			
 
 
-			if (waitKey(1) == 'h')
+			/*if (waitKey(1) == 'h')
 			{
-				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-				cout << "ZMIANA TRYBU!" << endl;
-				useHaar = false;
+				if (useHaar == false)
+				{
+					putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useHaar = true;
+				}
+				else
+				{
+					putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useHaar = false;
+				}
+				
+			}*/
+			if (waitKey(1) == 'a')
+			{
+				cascadeIndex++;
+				if (cascadeIndex > 5)
+				{
+					cascadeIndex = 1;
+				}
+				cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
 			}
-
-
+			if (waitKey(1) == 's')
+			{
+				imwrite("screen.jpg", image);
+				cout << "Zapis pliku " << imageNumber << ".jpg" << endl;
+			}
 		}
 
 		//if (backgroundFrame>0)
 		imshow("Frame", frame);
 		//imshow("Background", back);
 		imshow("Drawing", image);
+
 		imshow("Detection", detection);
 		imshow("HSV", hsvv);
 		imshow("YCBCR", ycbcr);
 		if (waitKey(10) >= 0) break;
+
 	}
 	return 0;
 }
