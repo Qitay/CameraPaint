@@ -1,7 +1,10 @@
-#include<opencv2/opencv.hpp>
-#include<iostream>
-#include<vector>
-#include<algorithm>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <iomanip>
+#include <ctime>
+
 using namespace std;
 using namespace cv;
 
@@ -34,7 +37,6 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 	return make_pair(Point(centerx, centery), radius);
 }
 
-
 int main(int argc, char *argv[])
 {
 	CascadeClassifier hand_cascade("hand3.xml");
@@ -46,7 +48,7 @@ int main(int argc, char *argv[])
 
 	bool useHaar = true;
 	int cascadeIndex = 1;
-	int imageNumber = 1;
+	char waitkey;
 
 	Mat frame;
 	Mat back;
@@ -54,18 +56,20 @@ int main(int argc, char *argv[])
 	Mat detection;
 	Mat hsv;
 	vector<pair<Point, double> > palm_centers;
-	VideoCapture cap(1);
+	VideoCapture cap(0);
 	BackgroundSubtractorMOG2 bg;
 
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
 	namedWindow("Frame");
 	//namedWindow("Background");
-	//namedWindow("Drawing", WINDOW_AUTOSIZE);
-	namedWindow("Drawing");
+	namedWindow("Drawing", WINDOW_AUTOSIZE);
+	
+	//namedWindow("Drawing");
 	namedWindow("Detection");
-	namedWindow("HSV");
-	namedWindow("YCBCR");
+
+	//namedWindow("HSV");
+	//namedWindow("YCBCR");
 
 	int backgroundFrame = 500;
 
@@ -81,8 +85,8 @@ int main(int argc, char *argv[])
 	int frameH;
 	int frameW;
 	//Mat3b frame;
-	Mat ycbcr;
-	Mat hsvv;
+	//Mat ycbcr;
+	//Mat hsvv;
 	int R = 0;
 	int B = 0;
 	int G = 0;
@@ -94,21 +98,29 @@ int main(int argc, char *argv[])
 		vector<vector<Point> > contours;
 		cap >> frame;
 		cap >> detection;
-		cap >> hsvv;
-		cap >> ycbcr;
+		
 
 		flip(frame, frame, 1); //flips video	
 		flip(detection, detection, 1); //flips video
-		flip(hsvv, hsvv, 1); //flips video	
-		flip(ycbcr, ycbcr, 1); //flips video	
+
 		frameH = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 
+		//SKIN COLOR DETECTION
+
+		//cap >> hsvv;
+		//cap >> ycbcr;
+
+		//flip(hsvv, hsvv, 1); //flips video	
+		//flip(ycbcr, ycbcr, 1); //flips video	
+
 		//blur(src, src, Size(3, 3));
-		cvtColor(detection, hsvv, CV_BGR2HSV);
-		cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
-		inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
-		inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
+		//cvtColor(detection, hsvv, CV_BGR2HSV);
+		//cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
+
+
+		//inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
+		//inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 
 		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 0, 255), 2, 8, 0);
 		putText(frame, "USUN", Point(5, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
@@ -288,8 +300,6 @@ int main(int argc, char *argv[])
 					}
 
 
-					
-					
 					int lastX = posX; //save x position as last
 					int lastY = posY; //save y position as last
 
@@ -301,7 +311,6 @@ int main(int argc, char *argv[])
 							posY = palm_center.y; //get new y position
 
 						}
-
 					}
 					else
 					{
@@ -322,7 +331,7 @@ int main(int argc, char *argv[])
 
 					if (lastX != 0 && lastY != 0 && posX != 0 && posY != 0)
 					{
-						if (std::abs(lastX - posX) < 45 && std::abs(lastY - posY) < 45) //aby zniwelowaæ b³êdne przeskoki
+						if (std::abs(lastX - posX) < 30 && std::abs(lastY - posY) < 30) //aby zniwelowaæ b³êdne przeskoki
 						{
 							if (useHaar == false)
 							{
@@ -361,7 +370,6 @@ int main(int argc, char *argv[])
 								B = 0;
 								G = 255;
 
-
 								putText(frame, "Wybrano czerwony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 							}
 							if (posX > 540 && posX < 640 && posY<100 && posY>0)
@@ -399,7 +407,9 @@ int main(int argc, char *argv[])
 				}
 				
 			}*/
-			if (waitKey(1) == 'a')
+
+			waitkey = waitKey(1);
+			if (waitkey == ' ')
 			{
 				cascadeIndex++;
 				if (cascadeIndex > 5)
@@ -408,11 +418,27 @@ int main(int argc, char *argv[])
 				}
 				cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
 			}
-			if (waitKey(1) == 's')
+			else if (waitkey == 's')
 			{
-				imwrite("screen.jpg", image);
-				cout << "Zapis pliku " << imageNumber << ".jpg" << endl;
+				string s = "screen-";
+
+				time_t rawtime;
+				struct tm * timeinfo;
+				char buffer[80];
+
+				time(&rawtime);
+				timeinfo = localtime(&rawtime);
+
+				strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+				std::string str(buffer);
+
+				s += str;
+				s += ".jpg";
+
+				imwrite(s, image);
+				cout << "Zapis pliku " << s << endl;
 			}
+			waitkey = '-';
 		}
 
 		//if (backgroundFrame>0)
@@ -421,10 +447,10 @@ int main(int argc, char *argv[])
 		imshow("Drawing", image);
 
 		imshow("Detection", detection);
-		imshow("HSV", hsvv);
-		imshow("YCBCR", ycbcr);
-		if (waitKey(10) >= 0) break;
 
+		//imshow("HSV", hsvv);
+		//imshow("YCBCR", ycbcr);
+		//if (waitKey(10) >= 0) break;
 	}
 	return 0;
 }
