@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
 	// Position and frame size
 	int posX = 0;
 	int posY = 0;
+	int lastX;
+	int lastY;
 	int frameH;
 	int frameW;
 	//Mat3b frame;
@@ -151,37 +153,40 @@ int main(int argc, char *argv[])
 		//inRange(hsv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsv);
 		//inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 
-		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 0, 255), 2, 8, 0);
-		putText(frame, "USUN", Point(5, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
-		rectangle(frame, Point(0, 100), Point(100, 200), Scalar(0, 255, 0), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 150), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
-		rectangle(frame, Point(0, 200), Point(100, 300), Scalar(240, 17, 17), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 250), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
-		rectangle(frame, Point(0, 300), Point(100, 400), Scalar(0, 0, 255), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
+		rectangle(frame, Point(0, 0), Point(100, 150), Scalar(255, 0, 255), 2, 8, 0);
+		putText(frame, "USUN", Point(5, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
+		rectangle(frame, Point(0, 150), Point(100, 250), Scalar(0, 255, 0), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 200), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
+		rectangle(frame, Point(0, 250), Point(100, 350), Scalar(240, 17, 17), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 300), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
+		rectangle(frame, Point(0, 350), Point(100, 450), Scalar(0, 0, 255), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 400), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
 
-		rectangle(frame, Point(540, 0), Point(640, 100), Scalar(0, 0, 0), 2, 8, 0);
-		line(frame, Point(550, 50), Point(630, 50), Scalar(0, 0, 0), 9, 2);
 		rectangle(frame, Point(540, 100), Point(640, 200), Scalar(0, 0, 0), 2, 8, 0);
-		line(frame, Point(550, 150), Point(630, 150), Scalar(0, 0, 0), 3, 2);
+		line(frame, Point(550, 150), Point(630, 150), Scalar(0, 0, 0), 9, 2);
+		rectangle(frame, Point(540, 200), Point(640, 300), Scalar(0, 0, 0), 2, 8, 0);
+		line(frame, Point(550, 250), Point(630, 250), Scalar(0, 0, 0), 3, 2);
+		rectangle(frame, Point(540, 300), Point(640, 400), Scalar(0, 0, 0), 2, 8, 0);
+		putText(frame, "Zapisz", Point(545, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
 		//putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
 
 		// BACKGROUND FRAME OPERATOR
-		if (backgroundFrame>0)
-		{
-			bg.operator()(frame, fore); backgroundFrame--;
-		}
-		else
-		{
-			bg.operator()(frame, fore, 0);
-		}
-		bg.getBackgroundImage(back); // set background
-
-		erode(fore, fore, Mat());
-		dilate(fore, fore, Mat());
 		
 		if (useHaar == false)
 		{
+			if (backgroundFrame>0)
+			{
+				bg.operator()(frame, fore); backgroundFrame--;
+			}
+			else
+			{
+				bg.operator()(frame, fore, 0);
+			}
+			bg.getBackgroundImage(back); // set background
+
+			erode(fore, fore, Mat());
+			dilate(fore, fore, Mat());
+
 			findContours(fore, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 			for (int i = 0; i < contours.size(); i++)
 			{
@@ -369,11 +374,11 @@ int main(int argc, char *argv[])
 					line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
 				}
 
-				if (posX > 0 && posX < 100 && posY < 100 && posY>0)
+				if(posX > 0 && posX < 100 && posY<160 && posY>0)
 				{
 					image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
 				}
-				if (posX > 0 && posX < 100 && posY < 200 && posY>100)
+				if (posX > 0 && posX < 100 && posY<250 && posY>100)
 				{
 					R = 0;
 					B = 255;
@@ -381,7 +386,7 @@ int main(int argc, char *argv[])
 
 					putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 0 && posX < 100 && posY < 300 && posY>200)
+				if (posX > 0 && posX < 100 && posY<350 && posY>200)
 				{
 					R = 240;
 					B = 17;
@@ -389,7 +394,7 @@ int main(int argc, char *argv[])
 
 					putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 0 && posX < 100 && posY < 400 && posY>300)
+				if (posX > 0 && posX < 100 && posY<450 && posY>300)
 				{
 					R = 0;
 					B = 0;
@@ -397,15 +402,31 @@ int main(int argc, char *argv[])
 
 					putText(frame, "Wybrano czerwony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 540 && posX < 640 && posY < 100 && posY>0)
+				if (posX > 540 && posX < 640 && posY<200 && posY>100)
 				{
 					thickness = 9;
 					putText(frame, "Grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 540 && posX < 640 && posY < 200 && posY>100)
+				if (posX > 540 && posX < 640 && posY<300 && posY>200)
 				{
 					thickness = 3;
 					putText(frame, "Mniej grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX>540 && posX < 640 && posY < 400 && posY>300)
+				{
+					string s = "screen-";
+					time_t rawtime;
+					struct tm * timeinfo;
+					char buffer[80];
+					time(&rawtime);
+					timeinfo = localtime(&rawtime);
+					strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+					std::string str(buffer);
+					s += str;
+					s += ".jpg";
+					imwrite(s, image);
+					cout << "Zapis pliku " << s << endl;
+					putText(frame, "Zapisano", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
 			}
 		}
