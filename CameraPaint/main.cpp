@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
 	for (;;)
 	{
-		vector<vector<Point> > contours;
+		vector<vector<Point>> contours;
 		cap >> frame;
 		cap >> detection;
 		
@@ -404,27 +404,6 @@ int main(int argc, char *argv[])
 
 			putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
 			
-
-
-			if (waitKey(1) == 'h')
-			{
-				if (useHaar == false)
-				{
-					putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-					cout << "ZMIANA TRYBU!" << endl;
-					useHaar = true;
-				}
-				else
-				{
-					putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-					cout << "ZMIANA TRYBU!" << endl;
-					useHaar = false;
-				}
-				
-			}
-
-			
-
 		//if (backgroundFrame>0)
 		imshow("Frame", frame);
 		//imshow("Background", back);
@@ -437,8 +416,7 @@ int main(int argc, char *argv[])
 			imshow("HSV", hsvv);
 			imshow("YCBCR", ycbcr);
 		}
-		
-		waitkey = waitKey(2);
+		waitkey = waitKey(10);
 		switch (waitkey)
 		{
 		case '-':
