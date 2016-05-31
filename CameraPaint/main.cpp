@@ -39,6 +39,7 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 
 int main(int argc, char *argv[])
 {
+	// Haar cascade classifiers initialization
 	CascadeClassifier hand_cascade("hand3.xml");
 	CascadeClassifier hand_cascade1("fist1.xml");
 	CascadeClassifier hand_cascade2("fist2.xml");
@@ -46,62 +47,78 @@ int main(int argc, char *argv[])
 	CascadeClassifier hand_cascade4("palm2.xml");
 	CascadeClassifier face_cascade("face1.xml");
 
+	VideoCapture cap(0);	// Capture source - default is 0
+
+	// working mode checks
 	bool useHaar = true;
 	bool useSkinDet = true;
 
-	int cascadeIndex = 1;
-	char waitkey = '-';
+	int cascadeIndex = 1; // current cascade index
+	char waitkey = '-';   // last read key - when not clicked is '-'
 
-	Mat frame;
-	Mat back;
-	Mat fore;
-	Mat detection;
-	Mat hsv;
-	vector<pair<Point, double> > palm_centers;
-	VideoCapture cap(0);
-	BackgroundSubtractorMOG2 bg;
+	int backgroundFrame = 500; // number of frames to initialize background
 
+					// Materials:
+	Mat frame;		// one frame of capture
+	Mat back;		// background image
+	Mat fore;		// foreground image
+	Mat detection;	// skin color detection
+	Mat image;		// our painting
+
+					// Skin color detetction:
+	Mat ycbcr;		// YCbCr
+	Mat hsv;		// Hue Saturation Value
+
+	
+
+	// Background subtractor
+	BackgroundSubtractorMOG2 bg;	
 	bg.set("nmixtures", 3);
 	bg.set("detectShadows", false);
+
+	// Windows shown - not needed here:
 	namedWindow("Frame");
-	//namedWindow("Background");
 	namedWindow("Drawing", WINDOW_AUTOSIZE);
-	
-	//namedWindow("Drawing");
-	namedWindow("Detection");
-	/*namedWindow("HSV");
-	namedWindow("YCBCR");*/
+	//namedWindow("Detection");
+	//namedWindow("Background");
+	//namedWindow("HSV");
+	//namedWindow("YCBCR");
 
-	int backgroundFrame = 500;
-
-	Mat image;
-	image = imread("white1.png", CV_LOAD_IMAGE_COLOR);
-	if (!image.data)
-	{
-		cout << "Nie mo¿na otworzyæ obrazu!" << std::endl;
-		return -1;
-	}
+	// Position and frame size
 	int posX = 0;
 	int posY = 0;
 	int frameH;
 	int frameW;
 	//Mat3b frame;
 
-	Mat ycbcr;
-	Mat hsvv;
 
 	int R = 0;
 	int B = 0;
 	int G = 0;
-	int thickness = 3;
+	int thickness = 3; // default brush size
 
-
-	for (;;)
+	// Read background for our painting
+	image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
+	if (!image.data)
 	{
-		vector<vector<Point>> contours;
+		cout << "Nie mo¿na otworzyæ obrazu!" << std::endl;
+		return -1;
+	}
+
+	// not haar
+	int no_of_fingers = 0;
+	vector<vector<Point>> contours;
+	
+	vector<Point> palm_points;
+	vector<pair<double, int> > distvec;
+	vector<pair<Point, double> > palm_centers; // Center of tracked object
+	
+
+	//-------------------------------------------------------------------------------------//
+	while(1)
+	{
 		cap >> frame;
 		cap >> detection;
-		
 
 		flip(frame, frame, 1); //flips video	
 		flip(detection, detection, 1); //flips video
@@ -110,31 +127,28 @@ int main(int argc, char *argv[])
 		frameW = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 
 		//SKIN COLOR DETECTION
-
 		if (useSkinDet)
 		{
-			flip(hsvv, hsvv, 1); //flips video	
+			flip(hsv, hsv, 1); //flips video	
 			flip(ycbcr, ycbcr, 1); //flips video	
 
 			//blur(src, src, Size(3, 3));
-			cvtColor(detection, hsvv, CV_BGR2HSV);
+			cvtColor(detection, hsv, CV_BGR2HSV);
 			cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
 
 
-			inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
+			inRange(hsv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsv);
 			inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 		}
 
-
-		//flip(hsvv, hsvv, 1); //flips video	
+		//flip(hsv, hsv, 1); //flips video	
 		//flip(ycbcr, ycbcr, 1); //flips video	
 
 		//blur(src, src, Size(3, 3));
-		//cvtColor(detection, hsvv, CV_BGR2HSV);
+		//cvtColor(detection, hsv, CV_BGR2HSV);
 		//cvtColor(detection, ycbcr, COLOR_BGR2YCrCb);
 
-
-		//inRange(hsvv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsvv);
+		//inRange(hsv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsv);
 		//inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 
 		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 0, 255), 2, 8, 0);
@@ -152,341 +166,339 @@ int main(int argc, char *argv[])
 		line(frame, Point(550, 150), Point(630, 150), Scalar(0, 0, 0), 3, 2);
 		//putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
 
+		// BACKGROUND FRAME OPERATOR
 		if (backgroundFrame>0)
 		{
-			bg.operator ()(frame, fore); backgroundFrame--;
+			bg.operator()(frame, fore); backgroundFrame--;
 		}
 		else
 		{
 			bg.operator()(frame, fore, 0);
 		}
-		bg.getBackgroundImage(back);
+		bg.getBackgroundImage(back); // set background
+
 		erode(fore, fore, Mat());
 		dilate(fore, fore, Mat());
-		findContours(fore, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-		for (int i = 0; i<contours.size(); i++)
-			//Ignore all small insignificant areas
-		if (contourArea(contours[i]) >= 5000)
+		
+		if (useHaar == false)
 		{
-			//Draw contour
-			vector<vector<Point>> tcontours;
-			tcontours.push_back(contours[i]);
-			if (useHaar == false)
+			findContours(fore, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+			for (int i = 0; i < contours.size(); i++)
 			{
-				drawContours(frame, tcontours, -1, cv::Scalar(0, 0, 255), 2);
-			}
-
-			//Detect Hull in current contour
-			vector<vector<Point> > hulls(1);
-			vector<vector<int> > hullsI(1);
-			convexHull(Mat(tcontours[0]), hulls[0], false);
-			convexHull(Mat(tcontours[0]), hullsI[0], false);
-			if (useHaar == false)
-			{
-				drawContours(frame, hulls, -1, cv::Scalar(0, 255, 0), 2);
-			}
-
-
-			//Find minimum area rectangle to enclose hand
-			RotatedRect rect = minAreaRect(Mat(tcontours[0]));
-
-			//Find Convex Defects
-			vector<Vec4i> defects;
-			if (hullsI[0].size()>0)
-			{
-				Point2f rect_points[4]; rect.points(rect_points);
-				for (int j = 0; j < 4; j++)
-				if (useHaar == false)
+				//Ignore all small insignificant areas
+				if (contourArea(contours[i]) >= 5000)
 				{
-					line(frame, rect_points[j], rect_points[(j + 1) % 4], Scalar(255, 0, 0), 1, 8);
-				}
-				Point rough_palm_center;
-				convexityDefects(tcontours[0], hullsI[0], defects);
-				if (defects.size() >= 3)
-				{
-					vector<Point> palm_points;
-					for (int j = 0; j<defects.size(); j++)
+					//Draw contour
+					vector<vector<Point>> tcontours;
+					tcontours.push_back(contours[i]);
+					drawContours(frame, tcontours, -1, cv::Scalar(0, 0, 255), 2);
+
+					//Detect Hull in current contour
+					vector<vector<Point> > hulls(1);
+					vector<vector<int> > hullsI(1);
+					convexHull(Mat(tcontours[0]), hulls[0], false);
+					convexHull(Mat(tcontours[0]), hullsI[0], false);
+					drawContours(frame, hulls, -1, cv::Scalar(0, 255, 0), 2);
+
+					//Find minimum area rectangle to enclose hand
+					RotatedRect rect = minAreaRect(Mat(tcontours[0]));
+
+					//Find Convex Defects
+					vector<Vec4i> defects;
+					if (hullsI[0].size() > 0)
 					{
-						int startidx = defects[j][0]; Point ptStart(tcontours[0][startidx]);
-						int endidx = defects[j][1]; Point ptEnd(tcontours[0][endidx]);
-						int faridx = defects[j][2]; Point ptFar(tcontours[0][faridx]);
-						//Sum up all the hull and defect points to compute average
-						rough_palm_center += ptFar + ptStart + ptEnd;
-						palm_points.push_back(ptFar);
-						palm_points.push_back(ptStart);
-						palm_points.push_back(ptEnd);
-					}
-
-					//Get palm center by first getting the average of all defect points, this is the rough palm center,
-					//Then you chose the closest 3 points ang get the circle radius and center formed from them which is the palm center.
-					rough_palm_center.x /= defects.size() * 3;
-					rough_palm_center.y /= defects.size() * 3;
-					Point closest_pt = palm_points[0];
-					vector<pair<double, int> > distvec;
-					for (int i = 0; i<palm_points.size(); i++)
-						distvec.push_back(make_pair(dist(rough_palm_center, palm_points[i]), i));
-					sort(distvec.begin(), distvec.end());
-
-					//Keep choosing 3 points till you find a circle with a valid radius
-					//As there is a high chance that the closes points might be in a linear line or too close that it forms a very large circle
-					pair<Point, double> soln_circle;
-					for (int i = 0; i + 2<distvec.size(); i++)
-					{
-						Point p1 = palm_points[distvec[i + 0].second];
-						Point p2 = palm_points[distvec[i + 1].second];
-						Point p3 = palm_points[distvec[i + 2].second];
-						soln_circle = circleFromPoints(p1, p2, p3);//Final palm center,radius
-						if (soln_circle.second != 0)
-							break;
-					}
-
-					//Find avg palm centers for the last few frames to stabilize its centers, also find the avg radius
-					palm_centers.push_back(soln_circle);
-					if (palm_centers.size()>10)
-						palm_centers.erase(palm_centers.begin());
-
-
-					Point palm_center;
-					double radius = 0;
-					for (int i = 0; i<palm_centers.size(); i++)
-					{
-						palm_center += palm_centers[i].first;
-						radius += palm_centers[i].second;
-					}
-					palm_center.x /= palm_centers.size();
-					palm_center.y /= palm_centers.size();
-					radius /= palm_centers.size();
-
-					//Draw the palm center and the palm circle
-					if (useHaar == false)
-					{
-						circle(frame, palm_center, 5, Scalar(144, 144, 255), 3);
-						circle(frame, palm_center, radius, Scalar(144, 144, 255), 2);
-					}
-
-
-					//Detect fingers by finding points that form an almost isosceles triangle with certain thesholds
-					int no_of_fingers = 0;
-					for (int j = 0; j<defects.size(); j++)
-					{
-						int startidx = defects[j][0]; Point ptStart(tcontours[0][startidx]);
-						int endidx = defects[j][1]; Point ptEnd(tcontours[0][endidx]);
-						int faridx = defects[j][2]; Point ptFar(tcontours[0][faridx]);
-						//X o--------------------------o Y
-						double Xdist = sqrt(dist(palm_center, ptFar));
-						double Ydist = sqrt(dist(palm_center, ptStart));
-						double length = sqrt(dist(ptFar, ptStart));
-
-						double retLength = sqrt(dist(ptEnd, ptFar));
-						//Change thresholds to improve performance
-						if (length <= 3 * radius&&Ydist >= 0.4*radius&&length >= 10 && retLength >= 10 && max(length, retLength) / min(length, retLength) >= 0.8)
-						if (min(Xdist, Ydist) / max(Xdist, Ydist) <= 0.8)
-						{
-							if ((Xdist >= 0.1*radius&&Xdist <= 1.3*radius&&Xdist<Ydist) || (Ydist >= 0.1*radius&&Ydist <= 1.3*radius&&Xdist>Ydist))
-								line(frame, ptEnd, ptFar, Scalar(0, 255, 0), 1), no_of_fingers++;
-						}
-					}
-
-					no_of_fingers = min(5, no_of_fingers);
-					//cout << "Palce: " << no_of_fingers << endl;
-					//cout << frameH << " " << frameW << endl;
-					cv::Rect maxRect; // 0 sized rect
-					std::vector<Rect> hands;
-
-					// -------------------------------------------------------- //
-
-					switch (cascadeIndex)
-					{
-					case 1:
-						hand_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
-						break;
-					case 2:
-						hand_cascade2.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
-						break;
-					case 3:
-						hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
-						break;
-					case 4:
-						hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
-						break;
-					case 5:
-						face_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(400, 400));
-						break;
-					}
-
-
-					int lastX = posX; //save x position as last
-					int lastY = posY; //save y position as last
-
-					if (useHaar == false)
-					{
-						if (0 < palm_center.x < frameW && 0 < palm_center.y < frameH)
-						{
-							posX = palm_center.x; //get new x position
-							posY = palm_center.y; //get new y position
-
-						}
-					}
-					else
-					{
-
-						// Draw circles on the detected hands
-
-						for (int i = 0; i < hands.size(); i++)
-						{
-							if (hands[i].area() > maxRect.area())
-								maxRect = hands[i];
-						}
-						Point center(maxRect.x + maxRect.width*0.5, maxRect.y + maxRect.height*0.5);
-						ellipse(frame, center, Size(maxRect.width*0.5, maxRect.height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
-						circle(frame, center, 5, Scalar(144, 144, 255), 3);
-						posX = maxRect.x;
-						posY = maxRect.y;
-					}
-
-					if (lastX != 0 && lastY != 0 && posX != 0 && posY != 0)
-					{
-						if (std::abs(lastX - posX) < 30 && std::abs(lastY - posY) < 30) //aby zniwelowaæ b³êdne przeskoki
-						{
+						Point2f rect_points[4]; rect.points(rect_points);
+						for (int j = 0; j < 4; j++)
 							if (useHaar == false)
 							{
-								//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
-								line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
+								line(frame, rect_points[j], rect_points[(j + 1) % 4], Scalar(255, 0, 0), 1, 8);
 							}
-							else
+						Point rough_palm_center;
+						convexityDefects(tcontours[0], hullsI[0], defects);
+						if (defects.size() >= 3)
+						{
+							for (int j = 0; j < defects.size(); j++)
 							{
-								//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
-								line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
+								int startidx = defects[j][0]; Point ptStart(tcontours[0][startidx]);
+								int endidx = defects[j][1]; Point ptEnd(tcontours[0][endidx]);
+								int faridx = defects[j][2]; Point ptFar(tcontours[0][faridx]);
+								//Sum up all the hull and defect points to compute average
+								rough_palm_center += ptFar + ptStart + ptEnd;
+								palm_points.push_back(ptFar);
+								palm_points.push_back(ptStart);
+								palm_points.push_back(ptEnd);
 							}
 
-							if (posX > 0 && posX < 100 && posY<100 && posY>0)
-							{
-								image = imread("white1.png", CV_LOAD_IMAGE_COLOR);
-							}
-							if (posX > 0 && posX < 100 && posY<200 && posY>100)
-							{
-								R = 0;
-								B = 255;
-								G = 0;
+							//Get palm center by first getting the average of all defect points, this is the rough palm center,
+							//Then you chose the closest 3 points ang get the circle radius and center formed from them which is the palm center.
+							rough_palm_center.x /= defects.size() * 3;
+							rough_palm_center.y /= defects.size() * 3;
+							Point closest_pt = palm_points[0];
 
-								putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
-							}
-							if (posX > 0 && posX < 100 && posY<300 && posY>200)
+							for (int i = 0; i < palm_points.size(); i++)
 							{
-								R = 240;
-								B = 17;
-								G = 17;
+								distvec.push_back(make_pair(dist(rough_palm_center, palm_points[i]), i));
+							}
+							sort(distvec.begin(), distvec.end());
 
-								putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
-							}
-							if (posX > 0 && posX < 100 && posY<400 && posY>300)
+							//Keep choosing 3 points till you find a circle with a valid radius
+							//As there is a high chance that the closes points might be in a linear line or too close that it forms a very large circle
+							pair<Point, double> soln_circle;
+							for (int i = 0; i + 2 < distvec.size(); i++)
 							{
-								R = 0;
-								B = 0;
-								G = 255;
+								Point p1 = palm_points[distvec[i + 0].second];
+								Point p2 = palm_points[distvec[i + 1].second];
+								Point p3 = palm_points[distvec[i + 2].second];
+								soln_circle = circleFromPoints(p1, p2, p3);//Final palm center,radius
+								if (soln_circle.second != 0)
+									break;
+							}
 
-								putText(frame, "Wybrano czerwony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
-							}
-							if (posX > 540 && posX < 640 && posY<100 && posY>0)
+							//Find avg palm centers for the last few frames to stabilize its centers, also find the avg radius
+							palm_centers.push_back(soln_circle);
+							if (palm_centers.size() > 10)
+								palm_centers.erase(palm_centers.begin());
+
+							Point palm_center;
+							double radius = 0;
+							for (int i = 0; i < palm_centers.size(); i++)
 							{
-								thickness = 9;
-								putText(frame, "Grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+								palm_center += palm_centers[i].first;
+								radius += palm_centers[i].second;
 							}
-							if (posX > 540 && posX < 640 && posY<200 && posY>100)
+							palm_center.x /= palm_centers.size();
+							palm_center.y /= palm_centers.size();
+							radius /= palm_centers.size();
+
+							//Draw the palm center and the palm circle
+
+							circle(frame, palm_center, 5, Scalar(144, 144, 255), 3);
+							circle(frame, palm_center, radius, Scalar(144, 144, 255), 2);
+
+							//Detect fingers by finding points that form an almost isosceles triangle with certain thesholds
+
+							for (int j = 0; j < defects.size(); j++)
 							{
-								thickness = 3;
-								putText(frame, "Mniej grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+								int startidx = defects[j][0]; Point ptStart(tcontours[0][startidx]);
+								int endidx = defects[j][1]; Point ptEnd(tcontours[0][endidx]);
+								int faridx = defects[j][2]; Point ptFar(tcontours[0][faridx]);
+								//X o--------------------------o Y
+								double Xdist = sqrt(dist(palm_center, ptFar));
+								double Ydist = sqrt(dist(palm_center, ptStart));
+								double length = sqrt(dist(ptFar, ptStart));
+
+								double retLength = sqrt(dist(ptEnd, ptFar));
+								//Change thresholds to improve performance
+								if (length <= 3 * radius&&Ydist >= 0.4*radius&&length >= 10 && retLength >= 10 && max(length, retLength) / min(length, retLength) >= 0.8)
+									if (min(Xdist, Ydist) / max(Xdist, Ydist) <= 0.8)
+									{
+										if ((Xdist >= 0.1*radius&&Xdist <= 1.3*radius&&Xdist<Ydist) || (Ydist >= 0.1*radius&&Ydist <= 1.3*radius&&Xdist>Ydist))
+											line(frame, ptEnd, ptFar, Scalar(0, 255, 0), 1), no_of_fingers++;
+									}
+							}
+							no_of_fingers = min(5, no_of_fingers);
+
+							if (0 < palm_center.x < frameW && 0 < palm_center.y < frameH)
+							{
+								posX = palm_center.x; //get new x position
+								posY = palm_center.y; //get new y position
 							}
 						}
 					}
 				}
 			}
+		}
 
-			putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
+					
+		//cout << "Palce: " << no_of_fingers << endl;
+		//cout << frameH << " " << frameW << endl;
+					
+		cv::Rect maxRect; // 0 sized rect
+		std::vector<Rect> hands;
+
+		// Cascade detection mode switch
+		switch (cascadeIndex)
+		{
+		case 1:
+			hand_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 2:
+			hand_cascade2.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 3:
+			hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 4:
+			hand_cascade3.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 5:
+			face_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(400, 400));
+			break;
+		}
+
+		int lastX = posX; //save x position as last
+		int lastY = posY; //save y position as last
+
+		if (useHaar == true)
+		{
+			// Draw circles on the detected hands
+			for (int i = 0; i < hands.size(); i++)
+			{
+				if (hands[i].area() > maxRect.area())
+					maxRect = hands[i];
+			}
+			Point center(maxRect.x + maxRect.width*0.5, maxRect.y + maxRect.height*0.5);
+			ellipse(frame, center, Size(maxRect.width*0.5, maxRect.height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
+			circle(frame, center, 5, Scalar(144, 144, 255), 3);
+			posX = maxRect.x + maxRect.width*0.5;
+			posY = maxRect.y + maxRect.height*0.5;
+		}
+
+		if (lastX != 0 && lastY != 0 && posX != 0 && posY != 0)
+		{
+			if (std::abs(lastX - posX) < 30 && std::abs(lastY - posY) < 30) //aby zniwelowaæ b³êdne przeskoki
+			{
+				if (useHaar == false)
+				{
+					//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(0, 255, 0), 3, 2);
+					line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
+				}
+				else
+				{
+					//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
+					line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
+				}
+
+				if (posX > 0 && posX < 100 && posY < 100 && posY>0)
+				{
+					image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
+				}
+				if (posX > 0 && posX < 100 && posY < 200 && posY>100)
+				{
+					R = 0;
+					B = 255;
+					G = 0;
+
+					putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX > 0 && posX < 100 && posY < 300 && posY>200)
+				{
+					R = 240;
+					B = 17;
+					G = 17;
+
+					putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX > 0 && posX < 100 && posY < 400 && posY>300)
+				{
+					R = 0;
+					B = 0;
+					G = 255;
+
+					putText(frame, "Wybrano czerwony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX > 540 && posX < 640 && posY < 100 && posY>0)
+				{
+					thickness = 9;
+					putText(frame, "Grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX > 540 && posX < 640 && posY < 200 && posY>100)
+				{
+					thickness = 3;
+					putText(frame, "Mniej grubo", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+			}
+		}
+
+
+		//putText(frame, "TERAZ RYSUJE", Point(150, 50), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(i, i, 255), 5, 8);
 			
-		//if (backgroundFrame>0)
+
+		// Display updated frames
 		imshow("Frame", frame);
-		//imshow("Background", back);
 		imshow("Drawing", image);
+		//imshow("Detection", detection);
+		//imshow("Background", back);
 
-		imshow("Detection", detection);
-
+		// Display skin detection frames
 		if (useSkinDet)
 		{
-			imshow("HSV", hsvv);
+			imshow("HSV", hsv);
 			imshow("YCBCR", ycbcr);
 		}
-		waitkey = waitKey(10);
+
+		// Buttons wait
+		waitkey = waitKey(1);
 		switch (waitkey)
 		{
-		case '-':
-			break;
-		case ' ':
-		{
-			cascadeIndex++;
-			if (cascadeIndex > 5)
-			{
-				cascadeIndex = 1;
+			case '-':{
+				break;
 			}
-			cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
-			break;
-		}
-		case 's':
-		{
-			string s = "screen-";
-
-			time_t rawtime;
-			struct tm * timeinfo;
-			char buffer[80];
-
-			time(&rawtime);
-			timeinfo = localtime(&rawtime);
-
-			strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
-			std::string str(buffer);
-
-			s += str;
-			s += ".jpg";
-
-			imwrite(s, image);
-			cout << "Zapis pliku " << s << endl;
-			break;
-		}
-		case 'h':
-		{
-			if (useHaar == false)
-			{
-				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-				cout << "ZMIANA TRYBU!" << endl;
-				useHaar = true;
+			case ' ':{
+				cascadeIndex++;
+				if (cascadeIndex > 5)
+				{
+					cascadeIndex = 1;
+				}
+				cout << "ZMIANA TRYBU! " << cascadeIndex << endl;
+				break;
 			}
-			else
-			{
-				putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-				cout << "ZMIANA TRYBU!" << endl;
-				useHaar = false;
+			case 's':{
+				string s = "picture-";
+
+				time_t rawtime;
+				struct tm * timeinfo;
+				char buffer[80];
+
+				time(&rawtime);
+				timeinfo = localtime(&rawtime);
+
+				strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+				std::string str(buffer);
+
+				s += str;
+				s += ".jpg";
+
+				imwrite(s, image);
+				cout << "Zapis pliku " << s << endl;
+				break;
 			}
-			break;
-		}
-		case 'g':
-		{
-			if (useSkinDet == false)
-			{
-				//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-				cout << "ZMIANA TRYBU!" << endl;
-				useSkinDet = true;
+			case 'h':{
+				if (useHaar == false)
+				{
+					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useHaar = true;
+				}
+				else
+				{
+					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useHaar = false;
+				}
+				break;
 			}
-			else
-			{
-				//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-				cout << "ZMIANA TRYBU!" << endl;
-				useSkinDet = false;
+			case 'g':{
+				if (useSkinDet == false)
+				{
+					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useSkinDet = true;
+				}
+				else
+				{
+					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
+					cout << "ZMIANA TRYBU!" << endl;
+					useSkinDet = false;
+				}
+				break;
 			}
-			break;
-		}
+			case 'q':{
+				return 0;
+			}
 		}
 		waitkey = '-';
-		}
+		
 		//if (waitKey(10) >= 0) break;
 	}
 	return 0;
