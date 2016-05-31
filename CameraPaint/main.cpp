@@ -341,8 +341,8 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		int lastX = posX; //save x position as last
-		int lastY = posY; //save y position as last
+		lastX = posX; //save x position as last
+		lastY = posY; //save y position as last
 
 		if (useHaar == true)
 		{
