@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	bg.set("detectShadows", false);
 
 	// Windows shown - not needed here:
-	namedWindow("Frame");
+	namedWindow("Frame", WINDOW_NORMAL);
 	namedWindow("Drawing", WINDOW_AUTOSIZE);
 	//namedWindow("Detection");
 	//namedWindow("Background");
@@ -153,15 +153,18 @@ int main(int argc, char *argv[])
 		//inRange(hsv, Scalar(0, 48, 80), Scalar(20, 255, 255), hsv);
 		//inRange(ycbcr, Scalar(0, 133, 77), Scalar(255, 173, 127), ycbcr);
 
-		rectangle(frame, Point(0, 0), Point(100, 150), Scalar(255, 0, 255), 2, 8, 0);
-		putText(frame, "USUN", Point(5, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 255), 2, 8, 0);
-		rectangle(frame, Point(0, 150), Point(100, 250), Scalar(0, 255, 0), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 200), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
-		rectangle(frame, Point(0, 250), Point(100, 350), Scalar(240, 17, 17), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 300), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
-		rectangle(frame, Point(0, 350), Point(100, 450), Scalar(0, 0, 255), 2, 8, 0);
-		putText(frame, "KOLOR", Point(5, 400), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
+		rectangle(frame, Point(0, 0), Point(100, 100), Scalar(255, 255, 255), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 50), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(255, 255, 255), 2, 8, 0);
+		rectangle(frame, Point(0, 100), Point(100, 200), Scalar(0, 255, 0), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 150), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 255, 0), 2, 8, 0);
+		rectangle(frame, Point(0, 200), Point(100, 300), Scalar(240, 17, 17), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 250), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(240, 17, 17), 2, 8, 0);
+		rectangle(frame, Point(0, 300), Point(100, 400), Scalar(0, 0, 255), 2, 8, 0);
+		putText(frame, "KOLOR", Point(5, 350), CV_FONT_HERSHEY_COMPLEX, 0.8, Scalar(0, 0, 255), 2, 8, 0);
+		
 
+		rectangle(frame, Point(540, 0), Point(640, 100), Scalar(0, 0, 0), 2, 8, 0);
+		putText(frame, "USUN", Point(545, 60), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 255), 2, 8, 0);
 		rectangle(frame, Point(540, 100), Point(640, 200), Scalar(0, 0, 0), 2, 8, 0);
 		line(frame, Point(550, 150), Point(630, 150), Scalar(0, 0, 0), 9, 2);
 		rectangle(frame, Point(540, 200), Point(640, 300), Scalar(0, 0, 0), 2, 8, 0);
@@ -373,12 +376,19 @@ int main(int argc, char *argv[])
 					//line(image, Point(lastX, lastY), Point(posX, posY), Scalar(240, 17, 17), 3, 2);
 					line(image, Point(lastX, lastY), Point(posX, posY), Scalar(R, B, G), thickness, 2);
 				}
-
-				if(posX > 0 && posX < 100 && posY<160 && posY>0)
+				if(posX > 540 && posX < 640 && posY<100 && posY>0)
 				{
 					image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
 				}
-				if (posX > 0 && posX < 100 && posY<250 && posY>100)
+				if (posX > 0 && posX < 100 && posY<100 && posY>0)
+				{
+					R = 255;
+					B = 255;
+					G = 255;
+
+					putText(frame, "Wybrano bia³y", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+				}
+				if (posX > 0 && posX < 100 && posY<200 && posY>100)
 				{
 					R = 0;
 					B = 255;
@@ -386,7 +396,7 @@ int main(int argc, char *argv[])
 
 					putText(frame, "Wybrano zielony", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 0 && posX < 100 && posY<350 && posY>200)
+				if (posX > 0 && posX < 100 && posY<300 && posY>200)
 				{
 					R = 240;
 					B = 17;
@@ -394,7 +404,7 @@ int main(int argc, char *argv[])
 
 					putText(frame, "Wybrano niebieski", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 				}
-				if (posX > 0 && posX < 100 && posY<450 && posY>300)
+				if (posX > 0 && posX < 100 && posY<400 && posY>300)
 				{
 					R = 0;
 					B = 0;
