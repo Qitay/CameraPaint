@@ -1,0 +1,18 @@
+﻿  main.cpp
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(37): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(128): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(129): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(194): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(228): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(246): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(255): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(272): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(284): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(288): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(309): warning C4804: '<' : unsafe use of type 'bool' in operation
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(353): warning C4018: '<' : signed/unsigned mismatch
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(358): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(359): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(361): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+c:\users\qitay\desktop\camerapaint\camerapaint\main.cpp(362): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+  test1.vcxproj -> C:\Users\Qitay\Desktop\CameraPaint\CameraPaint\Debug\test1.exe

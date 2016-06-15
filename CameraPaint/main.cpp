@@ -40,6 +40,10 @@ pair<Point, double> circleFromPoints(Point p1, Point p2, Point p3)
 int main(int argc, char *argv[])
 {
 	// Haar cascade classifiers initialization
+	
+	CascadeClassifier eye_cascade("haarcascade_mcs_eyepair_small.xml");
+	CascadeClassifier nose_cascade("haarcascade_mcs_nose.xml");
+
 	CascadeClassifier hand_cascade("hand3.xml");
 	CascadeClassifier hand_cascade1("fist1.xml");
 	CascadeClassifier hand_cascade2("fist2.xml");
@@ -51,7 +55,7 @@ int main(int argc, char *argv[])
 
 	// working mode checks
 	bool useHaar = true;
-	bool useSkinDet = true;
+	bool useSkinDet = false;
 
 	int cascadeIndex = 1; // current cascade index
 	char waitkey = '-';   // last read key - when not clicked is '-'
@@ -217,10 +221,12 @@ int main(int argc, char *argv[])
 					{
 						Point2f rect_points[4]; rect.points(rect_points);
 						for (int j = 0; j < 4; j++)
+						{
 							if (useHaar == false)
 							{
 								line(frame, rect_points[j], rect_points[(j + 1) % 4], Scalar(255, 0, 0), 1, 8);
 							}
+						}
 						Point rough_palm_center;
 						convexityDefects(tcontours[0], hullsI[0], defects);
 						if (defects.size() >= 3)
@@ -342,6 +348,12 @@ int main(int argc, char *argv[])
 		case 5:
 			face_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(400, 400));
 			break;
+		case 6:
+			eye_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 7:
+			nose_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
 		}
 
 		lastX = posX; //save x position as last
@@ -378,6 +390,19 @@ int main(int argc, char *argv[])
 				}
 				if(posX > 540 && posX < 640 && posY<100 && posY>0)
 				{
+					string s = "picture-";
+					time_t rawtime;
+					struct tm * timeinfo;
+					char buffer[80];
+					time(&rawtime);
+					timeinfo = localtime(&rawtime);
+					strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+					std::string str(buffer);
+					s += str;
+					s += ".jpg";
+					imwrite(s, image);
+					cout << "Zapis pliku " << s << endl;
+					putText(frame, "Zapisano", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
 					image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
 				}
 				if (posX > 0 && posX < 100 && posY<100 && posY>0)
@@ -424,7 +449,7 @@ int main(int argc, char *argv[])
 				}
 				if (posX>540 && posX < 640 && posY < 400 && posY>300)
 				{
-					string s = "screen-";
+					string s = "picture-";
 					time_t rawtime;
 					struct tm * timeinfo;
 					char buffer[80];
@@ -467,7 +492,7 @@ int main(int argc, char *argv[])
 			}
 			case ' ':{
 				cascadeIndex++;
-				if (cascadeIndex > 5)
+				if (cascadeIndex > 7)
 				{
 					cascadeIndex = 1;
 				}
