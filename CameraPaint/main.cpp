@@ -14,8 +14,6 @@ using namespace cv;
 #define white CV_RGB(255,255,255)
 #define black CV_RGB(0,0,0)
 
-
-
 void CreateTextButton(Mat& frame,Point p1, Point p2, Scalar s, std::string text, Point text_p)
 {
 
@@ -47,6 +45,22 @@ void DrawCircles(Mat& frame, std::vector<Rect>& hands, cv::Rect& maxRect, int& p
 
 }
 
+void SaveFile(Mat& frame)
+{
+	string s = "screen-";
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
+	std::string str(buffer);
+	s += str;
+	s += ".jpg";
+	imwrite(s, frame);
+	cout << "Zapis pliku " << s << endl;
+}
+
 void DisplayMessage(Mat& frame, Point p1, std::string text)
 {
 	putText(frame, text, p1, CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
@@ -61,12 +75,14 @@ int main(int argc, char *argv[])
 	CascadeClassifier hand_cascade3("palm1.xml");
 	CascadeClassifier hand_cascade4("palm2.xml");
 	CascadeClassifier face_cascade("face1.xml");
+	CascadeClassifier eye_cascade("haarcascade_mcs_eyepair_small.xml");
+	CascadeClassifier nose_cascade("haarcascade_mcs_nose.xml");
 
 	VideoCapture cap(0);	// Capture source - default is 0
 
 	// working mode checks
 	bool useHaar = true;
-	bool useSkinDet = true;
+	bool useSkinDet = false;
 
 	int cascadeIndex = 1; // current cascade index
 	char waitkey = '-';   // last read key - when not clicked is '-'
@@ -204,6 +220,12 @@ int main(int argc, char *argv[])
 		case 5:
 			face_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(400, 400));
 			break;
+		case 6:
+			eye_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
+		case 7:
+			nose_cascade.detectMultiScale(detection, hands, 1.1, 2, 0 | CV_HAAR_FIND_BIGGEST_OBJECT, Size(50, 50), Size(300, 300));
+			break;
 		}
 
 		lastX = posX; //save x position as last
@@ -232,7 +254,9 @@ int main(int argc, char *argv[])
 				}
 				if(posX > 540 && posX < 640 && posY<100 && posY>0)
 				{
+					SaveFile(image);
 					image = imread("white2.png", CV_LOAD_IMAGE_COLOR);
+					DisplayMessage(frame, Point(150, 120), "Wyczyszczono");
 				}
 				if (posX > 0 && posX < 100 && posY<100 && posY>0)
 				{
@@ -285,19 +309,8 @@ int main(int argc, char *argv[])
 				}
 				if (posX>540 && posX < 640 && posY < 400 && posY>300)
 				{
-					string s = "screen-";
-					time_t rawtime;
-					struct tm * timeinfo;
-					char buffer[80];
-					time(&rawtime);
-					timeinfo = localtime(&rawtime);
-					strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
-					std::string str(buffer);
-					s += str;
-					s += ".jpg";
-					imwrite(s, image);
-					cout << "Zapis pliku " << s << endl;
-					//putText(frame, "Zapisano", Point(150, 100), CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8, 0);
+					SaveFile(image);
+
 					DisplayMessage(frame, Point(150, 100), "Zapisano");
 				}
 			}
@@ -329,7 +342,7 @@ int main(int argc, char *argv[])
 			}
 			case ' ':{
 				cascadeIndex++;
-				if (cascadeIndex > 5)
+				if (cascadeIndex > 7)
 				{
 					cascadeIndex = 1;
 				}
@@ -337,36 +350,20 @@ int main(int argc, char *argv[])
 				break;
 			}
 			case 's':{
-				string s = "picture-";
-
-				time_t rawtime;
-				struct tm * timeinfo;
-				char buffer[80];
-
-				time(&rawtime);
-				timeinfo = localtime(&rawtime);
-
-				strftime(buffer, 80, "%d-%m-%Y-%I-%M-%S", timeinfo);
-				std::string str(buffer);
-
-				s += str;
-				s += ".jpg";
-
-				imwrite(s, image);
-				cout << "Zapis pliku " << s << endl;
+				SaveFile(image);
 				break;
 			}
 			case 'h':{
 				if (useHaar == false)
 				{
 					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-					cout << "ZMIANA TRYBU!" << endl;
+					cout << "ZMIANA TRYBU ON!" << endl;
 					useHaar = true;
 				}
 				else
 				{
 					//putText(frame, "OpenCV forever!", Point(50, 50), CV_FONT_HERSHEY_COMPLEX, 3, Scalar(i, i, 255), 5, 8);
-					cout << "ZMIANA TRYBU!" << endl;
+					cout << "ZMIANA TRYBU OFF!" << endl;
 					useHaar = false;
 				}
 				break;
