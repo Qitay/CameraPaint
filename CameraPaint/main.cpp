@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 	CascadeClassifier eye_cascade("haarcascade_mcs_eyepair_small.xml");
 	CascadeClassifier nose_cascade("haarcascade_mcs_nose.xml");
 
-	VideoCapture cap(0);	// Capture source - default is 0
+	VideoCapture cap(1);	// Capture source - default is 0
 
 	// working mode checks
 	bool useHaar = true;
